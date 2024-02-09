@@ -4,6 +4,7 @@ const ConfigurableAzureIdentity = require('./ConfigurableAzureIdentity');
 const fs = require('fs');
 const secrets = require('./secrets.json');
 const { randomBytes } = require('node:crypto')
+const jwt = require('jsonwebtoken');
 
 require('dotenv').config();
 
@@ -37,6 +38,22 @@ async function main() {
   const jwtSecret = randomBytes(64).toString("hex")
   const jwtSecretResult = await client.setSecret('jwtTokenSecret', jwtSecret);
   console.log(jwtSecretResult);
+
+  const faaGeneratedToken = jwt.sign({
+      id: '98765', // LDAP ID
+      role: 1,
+      extSys: 'FAA'
+  }, jwtSecret);
+  const faaTokenSecretResult = await client.setSecret('faaApiAuthToken', faaGeneratedToken);
+  console.log(faaTokenSecretResult);
+
+  const rdmsGeneratedToken = jwt.sign({
+      id: 'westagilelabs', // LDAP ID
+      role: 1,
+      extSys: 'RDMS'
+  }, jwtSecret);
+  const rdmsTokenSecretResult = await client.setSecret('webCemApiToken', rdmsGeneratedToken);
+  console.log(rdmsTokenSecretResult);
 }
 
 main().catch((error) => {
